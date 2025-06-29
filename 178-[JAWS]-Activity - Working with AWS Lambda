@@ -1,0 +1,133 @@
+178-[JAWS]-Activity - Working with AWS Lambda
+AWS Lambda Lab: Sales Analysis Report
+Overview
+This lab demonstrates the deployment and configuration of an AWS Lambda-based serverless computing solution to generate a daily sales analysis report. The solution retrieves data from a MySQL database hosted on an Amazon EC2 LAMP instance, with database connection details stored in AWS Systems Manager Parameter Store. The report is generated daily at 8 PM (Monday through Saturday) and sent via email using Amazon SNS.
+The lab focuses on SysOps tasks, including creating Lambda functions, configuring IAM permissions, setting up Lambda layers, and scheduling triggers with Amazon CloudWatch Events. The Python code for the Lambda functions is provided, allowing focus on deployment and configuration.
+Architecture
+The architecture involves the following components and flow:
+
+Amazon CloudWatch Events: Triggers the salesAnalysisReport Lambda function daily at 8 PM (Monday–Saturday).
+salesAnalysisReport Lambda Function: Invokes the salesAnalysisReportDataExtractor function to retrieve data.
+salesAnalysisReportDataExtractor Lambda Function: Queries the MySQL database (cafe) using the PyMySQL library.
+MySQL Database: Hosted on an Amazon EC2 LAMP instance, stores sales data.
+Amazon SNS (salesAnalysisReportTopic): Publishes the formatted report as an email to the administrator.
+AWS Systems Manager Parameter Store: Stores database connection information.
+
+Objectives
+Upon completing this lab, you will be able to:
+
+Configure AWS IAM policy permissions for Lambda to access other AWS resources.
+Create a Lambda layer to manage external library dependencies (e.g., PyMySQL).
+Develop Lambda functions to extract data from a database and send reports via SNS.
+Deploy and test a scheduled Lambda function that invokes another function.
+Use CloudWatch Logs to troubleshoot Lambda function issues.
+
+Duration
+Approximately 60 minutes.
+Prerequisites
+
+Access to the AWS Management Console.
+Basic understanding of AWS Lambda, IAM, CloudWatch, SNS, and MySQL.
+Provided Python code for Lambda functions and a salesanalysisreportdataextractor.zip file containing the PyMySQL library.
+
+Setup Instructions
+Accessing the AWS Management Console
+
+Start the lab by selecting Start Lab from the lab interface.
+Wait for the "Lab status: ready" message, then close the Start Lab panel.
+Open the AWS Management Console in a new browser tab by selecting AWS. If pop-ups are blocked, allow them in your browser settings.
+Arrange the AWS Management Console and lab instructions side by side for easy reference.
+
+Task 2: Creating a Lambda Layer and Data Extractor Function
+Task 2.1: Creating a Lambda Layer
+
+Navigate to Services > Compute > Lambda in the AWS Management Console.
+Select Layers and click Create Layer.
+Configure the layer:
+Name: pymysqlLibrary
+Upload the pymysql.zip file (contains the MySQL client library).
+
+
+Create the layer, making it available for Lambda functions.
+
+Task 2.2: Creating the Data Extractor Lambda Function
+
+In the Lambda console, select Functions and click Create function.
+Configure the function:
+Select Author from scratch.
+Function name: salesAnalysisReportDataExtractor
+Runtime: Python 3.9
+Execution role: Use the existing role salesAnalysisReportDERule.
+
+
+Click Create function.
+
+Task 2.3: Adding the Lambda Layer
+
+In the salesAnalysisReportDataExtractor function overview, select Layers.
+Click Add a layer and configure:
+Layer source: Custom layers
+Custom layers: pymysqlLibrary
+Version: 1
+
+
+Click Add to attach the layer.
+
+Task 2.4: Importing the Code
+
+Navigate to Lambda > Functions > salesAnalysisReportDataExtractor.
+In the Runtime settings panel, click Edit.
+Set the Handler to the appropriate value (e.g., lambda_function.lambda_handler).
+Upload the provided salesanalysisreportdataextractor.zip file containing the Python code.
+
+Task 5: Configuring and Testing the Sales Analysis Report Function
+Task 5.4: Configuring the salesAnalysisReport Lambda Function
+
+Navigate to Lambda > Functions > salesAnalysisReport.
+Review the function code and embedded comments to understand its logic.
+Note that the function retrieves the SNS topic ARN from an environment variable.
+
+Task 5.6: Adding a CloudWatch Events Trigger
+
+In the salesAnalysisReport function overview, click Add trigger.
+Configure the trigger:
+Trigger type: EventBridge (CloudWatch Events)
+Rule: Create a new rule
+Rule name: salesAnalysisReportTrigger
+Rule description: Triggers report generation daily
+Rule type: Schedule expression
+Schedule expression: cron(0 20 ? * MON-SAT *) (runs at 8 PM UTC, Monday–Saturday)
+
+
+Save the trigger configuration.
+
+Testing the Solution
+
+Verify the function execution:
+The salesAnalysisReport function should return a JSON object:{
+  "statusCode": 200,
+  "body": "sale analytics Report sent"
+}
+
+
+
+
+Check your email inbox for a notification from AWS Notifications with the subject "Daily Sales Analysis Report".
+Place additional orders on the café website and retest to observe updated reports.
+
+Troubleshooting
+
+Use CloudWatch Logs to diagnose issues with Lambda function execution.
+Verify IAM permissions allow access to Parameter Store, SNS, and the MySQL database.
+Ensure the PyMySQL library is correctly packaged in the Lambda layer.
+
+Conclusion
+This lab successfully demonstrated:
+
+Configuring IAM policies for Lambda resource access.
+Creating and using a Lambda layer for external dependencies.
+Building and deploying Lambda functions for data extraction and reporting.
+Scheduling Lambda execution with CloudWatch Events.
+Troubleshooting using CloudWatch Logs.
+
+To clean up, end the lab by selecting End Lab and confirming with Yes.
