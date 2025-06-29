@@ -1,0 +1,120 @@
+177-[JAWS]-Lab - [Challenge] AWS Lambda Exercise
+AWS Lambda Word Count Lab
+This repository contains the implementation of an AWS Lambda challenge lab, where I created a serverless application to count words in a text file, triggered by an Amazon S3 bucket upload, and reported the results via Amazon SNS. Below is a detailed overview of the lab, including objectives, steps, and outcomes.
+Lab Overview
+The AWS Lambda Exercise (Challenge) lab focuses on building a serverless application to count the number of words in a text file uploaded to an Amazon S3 bucket. The application triggers an AWS Lambda function upon file upload and sends the word count result via an Amazon SNS topic through email (and optionally SMS). The lab was completed in approximately 90 minutes.
+Objectives
+
+Create an AWS Lambda function to count words in a text file.
+Configure an Amazon S3 bucket to invoke the Lambda function when a text file is uploaded.
+Set up an Amazon SNS topic to send the word count result in an email.
+Test the function with sample text files and forward the results to an instructor.
+
+Prerequisites
+
+AWS account with access to the AWS Management Console.
+AWS Region consistency for all resources.
+Pre-existing IAM role (LambdaAccessRole) with the following permissions:
+AWSLambdaBasicExecutionRole: Write permissions to Amazon CloudWatch Logs.
+AmazonS3FullAccess: Full access to S3 buckets via the AWS Management Console.
+AmazonSNSFullAccess: Full access to Amazon SNS via the AWS Management Console.
+CloudWatchFullAccess: Full access to Amazon CloudWatch.
+
+
+
+Implementation Steps
+
+Create the Lambda Function:
+
+Developed a Lambda function in Python using the AWS Management Console.
+The function reads a text file from an S3 bucket, counts the words, and formats the result as:The word count in the <filename> file is <count>.
+Used the LambdaAccessRole IAM role to grant necessary permissions.
+
+
+Configure the S3 Bucket:
+
+Created an S3 bucket in the same AWS Region as the Lambda function.
+Configured an event notification in the S3 bucket to trigger the Lambda function whenever a text file is uploaded.
+
+
+Set Up Amazon SNS:
+
+Created an SNS topic to send notifications.
+Configured the topic to send an email with the subject: Word Count: Result.
+Optionally, enabled SMS notifications for the word count result.
+
+
+Test the Function:
+
+Uploaded multiple sample text files with varying word counts to the S3 bucket.
+Verified that the Lambda function was triggered, correctly counted the words, and sent the results via SNS email (and optionally SMS).
+
+
+Submit Results:
+
+Forwarded the SNS email containing the word count results and a description of the Lambda function to the instructor.
+
+
+
+Sample Lambda Function Code
+Below is an example of the Python code used in the Lambda function to count words in a text file and publish the result to an SNS topic:
+import json
+import boto3
+import urllib.parse
+
+def lambda_handler(event, context):
+    s3 = boto3.client('s3')
+    sns = boto3.client('sns')
+    
+    # Get the S3 bucket and file name from the event
+    bucket = event['Records'][0]['s3']['bucket']['name']
+    key = urllib.parse.unquote_plus(event['Records'][0]['s3']['object']['key'])
+    
+    # Read the file from S3
+    response = s3.get_object(Bucket=bucket, Key=key)
+    content = response['Body'].read().decode('utf-8')
+    
+    # Count words
+    word_count = len(content.split())
+    
+    # Prepare SNS message
+    message = f"The word count in the {key} file is {word_count}."
+    subject = "Word Count: Result"
+    
+    # Publish to SNS topic
+    sns.publish(
+        TopicArn='arn:aws:sns:<region>:<account-id>:<topic-name>',
+        Message=message,
+        Subject=subject
+    )
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps(f"Word count: {word_count}")
+    }
+
+Note: Replace <region>, <account-id>, and <topic-name> with the appropriate values for your AWS environment.
+Testing
+
+Uploaded sample text files (e.g., sample1.txt, sample2.txt) to the S3 bucket.
+Confirmed that the Lambda function was triggered and correctly counted words.
+Received SNS emails with the formatted message (e.g., The word count in the sample1.txt file is 150.).
+Optionally tested SMS notifications (if configured).
+
+Outcomes
+Upon completing the lab, I successfully:
+
+Created a Lambda function to count words in a text file.
+Configured an S3 bucket to trigger the Lambda function on file upload.
+Set up an SNS topic to send word count results via email.
+Tested the solution with multiple text files and verified the results.
+
+Conclusion
+This lab demonstrated the integration of AWS Lambda, S3, and SNS to build a serverless application for processing text files and sending notifications. The use of the LambdaAccessRole simplified IAM configuration, and the solution was successfully tested in the AWS Management Console.
+How to Run
+
+Clone this repository to your local machine.
+Ensure you have an AWS account and the necessary permissions.
+Follow the steps in the AWS Management Console to create the S3 bucket, Lambda function, and SNS topic.
+Use the provided sample code, updating the SNS topic ARN and other configurations as needed.
+Upload test text files to the S3 bucket and verify the results via SNS notifications.
